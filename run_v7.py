@@ -10,7 +10,7 @@ config.sat_backend = "kissat"
 E = Encoding()
 
 TASK = [1, 2, 3]
-POS = [1, 2, 3]
+POS = [1, 2, 3, 4]
 
 class Unique(object):
     def __hash__(self):
@@ -25,6 +25,7 @@ class Unique(object):
 ####################################
 # ## CLASSES FOR ATOMIC PROPOSITIONS
 ####################################
+# instances of this class represent atomic propositions 'DepOn(t1,t2)' capturing that task t1 depends on task t2
 @proposition(E)
 class DepOn(Unique):
     def __init__(self,task1,task2):
@@ -33,6 +34,7 @@ class DepOn(Unique):
     def __str__(self):
         return f"t{self.task1}>t{self.task2}"
 
+# instances of this class represent atomic propositions 'At(t,p)' capturing that task t is assigned position p
 @proposition(E)
 class At(Unique):
     def __init__(self, task, pos):
@@ -46,13 +48,9 @@ class At(Unique):
 ####################################
 
 # no task depends on itself
-# for task in TASK:
-#    E.add_constraint(~DepOn(task,task))
+for task in TASK:
+   E.add_constraint(~DepOn(task,task))
 
-# implied
-# for t1 in TASK:
-#     for t2 in TASK:
-#         E.add_constraint(DepOn(t1,t2) >> ~DepOn(t2,t1))
 
 # DepOn is transitive 
 for t1 in TASK:
@@ -88,7 +86,7 @@ for p in POS:
 ########################
 # additional constraints; change as appropriate to capture how task values compare
 E.add_constraint(DepOn(3,2))    # t3 > t2
-E.add_constraint(DepOn(2,1))    # t2 > t1
+# E.add_constraint(DepOn(2,1))    # t2 > t1
 # E.add_constraint(DepOn(3,1))    # t3 > t1
 # E.add_constraint(~DepOn(3,1))    # t3 > t2
 # E.add_constraint(~DepOn(2,1))    # t3 > t2
@@ -104,15 +102,19 @@ E.add_constraint(DepOn(2,1))    # t2 > t1
 # E.add_constraint(~At(3,3))
 # E.add_constraint(At(3,1))
 # E.add_constraint(~(At(3,2) >> At(2,1)))
+# E.add_constraint(~((DepOn(1,2) >> ~DepOn(2,1)) & (DepOn(1,3) >> ~DepOn(3,1)) & \
+#                    (DepOn(2,1) >> ~DepOn(1,2)) & (DepOn(2,3) >> ~DepOn(3,2)) & \
+#                    (DepOn(3,1) >> ~DepOn(1,3)) & DepOn(3,2) >> ~DepOn(2,3)))
+# E.add_constraint(DepOn(1,2) & DepOn(2,1))
 
 #########
 # SOLVING
 #########
 
-# Don't compile until you're finished adding all your constraints!
+# don't compile until you're finished adding all your constraints!
 T = E.compile()
 # E.introspect()
-# After compilation (and only after), you can check some of the properties
+# after compilation (and only after), you can check some of the properties
 # of your model:
 print("\nsatisfiable? %s" % T.satisfiable())
 print("#solutions: %d" % count_solutions(T))
@@ -132,7 +134,6 @@ if soln:
 
     for k in soln:
         if str(k)[2]=='@' and soln[k]:
-            # print(k)
             order[str(k)[4]] = str(k)[1]
 
     print("Dependencies: ", end="")
@@ -149,12 +150,7 @@ if soln:
         print(order[str(p)][0], end="    ")
 
     print("\nlikelihood that specific atomic proposition is true:")
-    # for v,vn in zip([DepOn(t,p) for t in TASK  for p in POS], ["t1@p1","t@p2","t1@p3","t2@p1","t2@p2","t2@p3","t3@p1","t3@p2","t3@p3"]):
     for v,vn in zip([At(t,p) for t in TASK  for p in POS], [str(At(t,p)) for t in TASK  for p in POS]):
-        # Ensure that you only send these functions NNF formulas
-        # Literals are compiled to NNF here
+        # ensure that you only send these functions NNF formulas
+        # literals are compiled to NNF here
         print(" %s: %.2f" % (vn, likelihood(T, v)))
-
-# print("\nnegating theory...")
-# T = T.negate()
-# print("negation satisfiable: %s" % T.satisfiable())
