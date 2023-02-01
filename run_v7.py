@@ -9,8 +9,8 @@ config.sat_backend = "kissat"
 # Encoding that will store all of your constraints
 E = Encoding()
 
-TASK = [1, 2, 3]
-POS = [1, 2, 3, 4]
+TASK = [1, 2, 3, 4]
+POS = [1, 2, 3, 4, 5]
 
 class Unique(object):
     def __hash__(self):
@@ -74,25 +74,32 @@ for t in TASK:
     constraint.add_exactly_one(E, [At(t,p) for p in POS])   
 
 # every position has exactly one task
-# for p in POS:
-#    constraint.add_exactly_one(E, [At(t,p) for t in TASK])   
+for p in POS:
+   constraint.add_exactly_one(E, [At(t,p) for t in TASK])   
 
 # every position has as most one task
-for p in POS:
-    constraint.add_at_most_one(E, [At(t,p) for t in TASK])   
+# for p in POS:
+#    constraint.add_at_most_one(E, [At(t,p) for t in TASK])   
 
 ########################
 # ADDITIONAL CONSTRAINTS
 ########################
 # additional constraints; change as appropriate to capture how task values compare
-E.add_constraint(DepOn(3,2))    # t3 > t2
-# E.add_constraint(DepOn(2,1))    # t2 > t1
-# E.add_constraint(DepOn(3,1))    # t3 > t1
-# E.add_constraint(~DepOn(3,1))    # t3 > t2
-# E.add_constraint(~DepOn(2,1))    # t3 > t2
-# E.add_constraint(~DepOn(2,3))    # t3 > t2
-# E.add_constraint(~DepOn(1,2))    # t3 > t2
-# E.add_constraint(~DepOn(1,3))    # t3 > t2
+E.add_constraint(DepOn(2,1))   
+# E.add_constraint(DepOn(3,2))   
+# E.add_constraint(DepOn(4,2))   
+
+# to have #solutions = #consistent positions, need to state all non-dependencies
+# for t in TASK:
+#     E.add_constraint(~DepOn(t,1))
+#     E.add_constraint(~DepOn(1,t))
+# for t in TASK:
+#     E.add_constraint(~DepOn(2,t))
+# for t in TASK:
+#     E.add_constraint(~DepOn(t,3))
+# for t in TASK:
+#     E.add_constraint(~DepOn(t,4))
+#     E.add_constraint(~DepOn(4,t))
 
 ##########################
 # CONSTRAINTS FOR CHECKING 
@@ -154,3 +161,4 @@ if soln:
         # ensure that you only send these functions NNF formulas
         # literals are compiled to NNF here
         print(" %s: %.2f" % (vn, likelihood(T, v)))
+ 
